@@ -1,14 +1,17 @@
 package ventanas;
 
+import persistencia.PacienteDAO;
+import persistencia.PacienteDAOImpl;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 
 public class VentanaPaciente extends JFrame {
-    private JTextField txtNombre, txtApellido, txtDni, txtObra, txtDiag;
+    private JTextField txtNombre, txtApellido, txtDni, txtObra, txtDiag, txtFechaNacimiento;
     private DefaultListModel<String> modeloLista;
     private java.util.List<Paciente> pacientes;
+    private PacienteDAO dao = new PacienteDAOImpl();
 
     public VentanaPaciente() {
         setTitle("Registro de Pacientes - Fundación Renacer");
@@ -20,7 +23,7 @@ public class VentanaPaciente extends JFrame {
         pacientes = new ArrayList<>();
         modeloLista = new DefaultListModel<>();
 
-        JPanel panelCampos = new JPanel(new GridLayout(6, 2, 5, 5));
+        JPanel panelCampos = new JPanel(new GridLayout(0, 2, 5, 5));
         panelCampos.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         panelCampos.add(new JLabel("Nombre:"));
@@ -35,6 +38,10 @@ public class VentanaPaciente extends JFrame {
         txtDni = new JTextField();
         panelCampos.add(txtDni);
 
+        panelCampos.add(new JLabel("Fecha de nacimiento:"));
+        txtFechaNacimiento = new JTextField();
+        panelCampos.add(txtFechaNacimiento);
+
         panelCampos.add(new JLabel("Obra Social:"));
         txtObra = new JTextField();
         panelCampos.add(txtObra);
@@ -44,48 +51,50 @@ public class VentanaPaciente extends JFrame {
         panelCampos.add(txtDiag);
 
         JButton btnGuardar = new JButton("Guardar");
-        panelCampos.add(btnGuardar);
-
         JButton btnLimpiar = new JButton("Limpiar");
+        panelCampos.add(btnGuardar);
         panelCampos.add(btnLimpiar);
 
+        // 🔹 Colocamos el formulario completo en el centro
+        add(panelCampos, BorderLayout.CENTER);
+
+        // 🔹 La lista de pacientes abajo
         JList<String> lista = new JList<>(modeloLista);
         JScrollPane scroll = new JScrollPane(lista);
+        add(scroll, BorderLayout.SOUTH);
 
-        add(panelCampos, BorderLayout.NORTH);
-        add(scroll, BorderLayout.CENTER);
 
-        // Acción Guardar
-        btnGuardar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String nombre = txtNombre.getText();
-                String apellido = txtApellido.getText();
-                String dni = txtDni.getText();
-                String obra = txtObra.getText();
-                String diag = txtDiag.getText();
+        btnGuardar.addActionListener(e -> guardarPaciente());
+        btnLimpiar.addActionListener(e -> limpiarCampos());
+    }
 
-                if (nombre.isEmpty() || apellido.isEmpty() || dni.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Complete los campos obligatorios");
-                    return;
-                }
+    private void guardarPaciente() {
+        String nombre = txtNombre.getText();
+        String apellido = txtApellido.getText();
+        String dni = txtDni.getText();
+        String fecha_nacimiento = txtFechaNacimiento.getText();
+        String obra = txtObra.getText();
+        String diag = txtDiag.getText();
 
-                Paciente p = new Paciente(nombre, apellido, dni, obra, diag);
-                pacientes.add(p);
-                modeloLista.addElement(p.toString());
+        if (nombre.isEmpty() || apellido.isEmpty() || dni.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Complete los campos obligatorios");
+            return;
+        }
 
-                JOptionPane.showMessageDialog(null, "✅ Paciente registrado correctamente");
-            }
-        });
+        Paciente p = new Paciente(nombre, apellido, dni, obra, diag, fecha_nacimiento);
+        pacientes.add(p);
+        dao.insertar(p);
+        modeloLista.addElement(p.toString());
 
-        // Acción Limpiar
-        btnLimpiar.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                txtNombre.setText("");
-                txtApellido.setText("");
-                txtDni.setText("");
-                txtObra.setText("");
-                txtDiag.setText("");
-            }
-        });
+        JOptionPane.showMessageDialog(null, "✅ Paciente registrado correctamente");
+    }
+
+    private void limpiarCampos() {
+        txtNombre.setText("");
+        txtApellido.setText("");
+        txtDni.setText("");
+        txtFechaNacimiento.setText("");
+        txtObra.setText("");
+        txtDiag.setText("");
     }
 }
